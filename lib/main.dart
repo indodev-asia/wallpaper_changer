@@ -4,13 +4,10 @@ import 'dart:io';    // Required for Directory and File operations
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p; // Required for path manipulation (e.g., getting basename)
 
-// The main function that starts the Flutter application.
 void main() {
   runApp(const MyApp());
 }
 
-// MyApp is the root widget of the application.
-// It sets up the basic Material Design theme.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -28,8 +25,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// WallpaperChangerScreen is a StatefulWidget because its state (current wallpaper)
-// will change over time.
 class WallpaperChangerScreen extends StatefulWidget {
   const WallpaperChangerScreen({super.key});
 
@@ -37,42 +32,31 @@ class WallpaperChangerScreen extends StatefulWidget {
   State<WallpaperChangerScreen> createState() => _WallpaperChangerScreenState();
 }
 
-// The State class for WallpaperChangerScreen.
 class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
-  // Define the path to your wallpaper directory.
-  // IMPORTANT: Ensure this path is correct for your system.
   final String wallpaperDirPath = '/home/robohax/Desktop/Wallpaper/Car/';
-
-  // List to store the paths of all found wallpaper files.
   List<String> wallpaperFiles = [];
-  // Index to keep track of the current wallpaper being displayed.
   int currentWallpaperIndex = 0;
-  // String to display the name of the current wallpaper in the GUI.
   String currentWallpaperName = 'Loading wallpapers...';
-  // Timer object to schedule periodic wallpaper changes.
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    // When the screen initializes, load the wallpapers and start the changer.
     _loadWallpapers();
     _startWallpaperChanger();
   }
 
   @override
   void dispose() {
-    // Cancel the timer when the widget is disposed to prevent memory leaks.
     _timer?.cancel();
     super.dispose();
   }
 
-  // Asynchronously loads wallpaper files from the specified directory.
+
   Future<void> _loadWallpapers() async {
     try {
       final Directory directory = Directory(wallpaperDirPath);
 
-      // Check if the directory exists.
       if (!await directory.exists()) {
         setState(() {
           currentWallpaperName = 'Error: Wallpaper directory not found!';
@@ -81,7 +65,6 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
         return; // Exit if directory doesn't exist
       }
 
-      // List all files in the directory and filter for common image extensions.
       wallpaperFiles = directory
           .listSync()
           .where((entity) =>
@@ -92,7 +75,6 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
           .map((entity) => entity.path)
           .toList();
 
-      // If no wallpaper files are found, update the GUI.
       if (wallpaperFiles.isEmpty) {
         setState(() {
           currentWallpaperName = 'No wallpaper files found!';
@@ -100,11 +82,11 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
         print('No wallpaper files found in $wallpaperDirPath');
       } else {
         print('Found ${wallpaperFiles.length} wallpaper files.');
-        // Immediately change to the first wallpaper upon loading.
+        
         _changeWallpaper();
       }
     } catch (e) {
-      // Handle any errors during directory access or file loading.
+     
       setState(() {
         currentWallpaperName = 'Error loading wallpapers: $e';
       });
@@ -112,7 +94,6 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
     }
   }
 
-  // Starts the periodic timer to change wallpapers every 5 minutes.
   void _startWallpaperChanger() {
     // Timer.periodic creates a repeating timer.
     // Duration(minutes: 5) sets the interval to 5 minutes (300 seconds).
@@ -122,32 +103,26 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
     print('Wallpaper changer started. Changing every 5 minutes.');
   }
 
-  // Changes the desktop wallpaper.
-  // This function uses `gsettings` command, which is common for GNOME desktop environments.
+  
   Future<void> _changeWallpaper() async {
     if (wallpaperFiles.isEmpty) {
       print('No wallpaper files to change. Please add images to the directory.');
       return;
     }
 
-    // Get the path of the next wallpaper in the list.
-    // The modulo operator (%) ensures cycling back to the start of the list.
+   
     final String nextWallpaperPath =
         wallpaperFiles[currentWallpaperIndex % wallpaperFiles.length];
     currentWallpaperIndex++; // Increment index for the next cycle
 
-    // Update the GUI to show the name of the wallpaper being set.
+   
     setState(() {
       currentWallpaperName = p.basename(nextWallpaperPath);
     });
 
     print('Attempting to set wallpaper: $nextWallpaperPath');
 
-    // Execute the `gsettings` command to change the wallpaper.
-    // `gsettings set org.gnome.desktop.background picture-uri "file:///path/to/image.jpg"`
-    // `file://` prefix is crucial for `picture-uri`.
-    // We run it for both 'picture-uri' (light theme) and 'picture-uri-dark' (dark theme)
-    // to ensure it works regardless of the user's theme setting.
+    
     try {
       final resultLight = await Process.run(
         'gsettings',
@@ -168,12 +143,9 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
         ],
       );
 
-      // Check the exit codes to see if the commands were successful.
-      if (resultLight.exitCode == 0 && resultDark.exitCode == 0) {
-        // Corrected: Use currentWallpaperName which is already updated
+     if (resultLight.exitCode == 0 && resultDark.exitCode == 0) {
         print('Wallpaper set successfully to: $currentWallpaperName');
       } else {
-        // Log any errors from the gsettings command.
         print('Error setting wallpaper (light theme): ${resultLight.stderr}');
         print('Error setting wallpaper (dark theme): ${resultDark.stderr}');
         setState(() {
@@ -181,7 +153,6 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
         });
       }
     } catch (e) {
-      // Catch any exceptions that occur during process execution.
       print('Exception while running gsettings command: $e');
       setState(() {
         currentWallpaperName = 'Error: $e';
@@ -219,7 +190,7 @@ class _WallpaperChangerScreenState extends State<WallpaperChangerScreen> {
               ),
             ),
             const Spacer(), // Pushes content towards the center/bottom
-            // The required signature text at the bottom.
+            
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
