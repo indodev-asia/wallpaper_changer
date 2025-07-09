@@ -1,3 +1,5 @@
+**Dart Wallpaper Changer**
+
 A linux gui app in dart, that change wallpaper every 5 minutes - code by Antonius (indodev.asia)
 
 **How to Install**
